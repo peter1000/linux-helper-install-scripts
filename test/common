@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# The *linux-helper-install-scripts package* by **peter1000** <https://github.com/peter1000> is licensed under the GPLv2 License
+# and adapted from [arch-install-scripts dated 2015-07-04](https://projects.archlinux.org/arch-install-scripts.git) - GPLv2 License
+#
+#   This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public 
+#   License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any 
+#   later version.
+# 
+#   This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+#
+
+fail=0
+testcount=0
+
+EXPECT_success() {
+  (( ++testcount ))
+  if ! "$@"; then
+    (( ++fail ))
+    printf 'expectation failed: did not succeed: %s\n' "$*" >&2
+  fi
+}
+
+EXPECT_failure() {
+  (( ++testcount ))
+  if "$@"; then
+    (( ++fail ))
+    printf 'expectation failed: did not fail: %s\n' "$*" >&2
+  fi
+}
+
+TEST_exit() {
+  local result
+
+  trap -- EXIT
+
+  (( fail == 0 )) && result=PASS || result=FAIL
+
+  printf '%s: %s\n' "$result" "$1"
+
+  exit $(( fail != 0 ))
+}
+
+ASSERT_streq() {
+  if [[ $1 != "$2" ]]; then
+    printf 'assertion failed [line %d]: [[ %s = "%s" ]]\n' "$BASH_LINENO" "$1" "$2" >&2
+  fi
+}
+
+TEST_start() {
+  trap "TEST_exit '$1'" EXIT
+}
+
+TEST_start "${0##*/test_}"
+
